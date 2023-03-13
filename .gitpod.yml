@@ -24,13 +24,13 @@ tasks:
       gp sync-done setup
   - name: DB
     command: |
-      make up
+      sqd up
       gp sync-done db
   - name: GraphQL API
     command: |
       gp sync-await setup
       gp sync-await db
-      npx sqd serve
+      sqd serve
   - command: |
       gp sync-await setup
       gp ports await 4350 
@@ -40,6 +40,5 @@ tasks:
       gp open src/processor.ts
       gp sync-await setup
       gp sync-await db
-      npm run build
       gp ports await 23798
-      npx sqd process
+      sqd process
