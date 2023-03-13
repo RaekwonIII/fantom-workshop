@@ -300,6 +300,9 @@ async function saveRaveData(
         metadata = <string>functions.tokenURI.tryDecodeResult(res.returnData) || '';
       }
       t.metadata = metadata;
+      if (!t.name && t.metadata) {
+        t.name = JSON.parse(metadata).name
+      }
     }
   })
   ctx.log.info(`Done`);
