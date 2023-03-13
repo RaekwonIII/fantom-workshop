@@ -271,7 +271,13 @@ async function saveRaveData(
       token.metadata = metadata;
       tokens.set(token.id, token);
     }
-    if (name) token.name = name;
+    if (name) {
+      ctx.log.info(`token ${tokenIdString} has ${name} for domain name`)
+      token.name = name;
+    }
+    else if (token.metadata) {
+      token.name = JSON.parse(token.metadata).name
+    }
     token.owner = toOwner;
 
     if (toOwner && fromOwner) {
