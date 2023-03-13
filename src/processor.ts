@@ -8,7 +8,7 @@ import { maxBy } from "lodash";
 import { Multicall } from "./abi/multicall";
 
 const raveAddress = "0x14ffd1fa75491595c6fd22de8218738525892101";
-const multicallAddress = "0xD98e3dBE5950Ca8Ce5a4b59630a5652110403E5c".toLowerCase();
+const multicallAddress = "0x0118EF741097D0d3cc88e46233Da1e407d9ac139".toLowerCase();
 
 const processor = new EvmBatchProcessor()
   .setDataSource({
@@ -259,6 +259,16 @@ async function saveRaveData(
         metadata: "", // will be filled-in by Multicall
         contract: await getOrCreateContractEntity(ctx),
       });
+      let metadata = '';
+      const contractAPI = new ContractAPI(ctx, raveAddress);
+      metadata = await contractAPI.tokenURI(BigNumber.from(tokenId))
+
+      // usually, you'd get the token's metadata URI like this
+      // uri = <string>res.value;
+      // but this contract, somehow, stores the metadata **directly**, you only get it as base64 string
+      metadata = Buffer.from((await contractAPI.tokenURI(BigNumber.from(tokenId))).replace("data:application/json;base64,", ""), "base64").toString();
+
+      token.metadata = metadata;
       tokens.set(token.id, token);
     }
     if (name) token.name = name;
@@ -279,30 +289,30 @@ async function saveRaveData(
     }
   }
 
-  const maxHeight = maxBy(raveDataArr, data => data.block)!.block;
+  // const maxHeight = maxBy(raveDataArr, data => data.block)!.block;
 
-  const multicall = new Multicall(ctx, {height: maxHeight}, multicallAddress);
+  // const multicall = new Multicall(ctx, {height: maxHeight}, multicallAddress);
 
-  ctx.log.info(`Calling multicall for ${raveDataArr.length} tokens...`);
+  // ctx.log.info(`Calling multicall for ${raveDataArr.length} tokens...`);
 
-  const results = await multicall.tryAggregate(functions.tokenURI, raveDataArr.map(data => [raveAddress, [BigNumber.from(data.tokenId)]] as [string, BigNumber[]]), 100);
+  // const results = await multicall.tryAggregate(functions.tokenURI, raveDataArr.map(data => [raveAddress, [BigNumber.from(data.tokenId)]] as [string, BigNumber[]]), 100);
 
-  results.forEach((res, i) => {
-    let t = tokens.get(raveDataArr[i].tokenId.toString());
-    if (t) {
-      let metadata = '';
-      if (res.success) {
-        // usually, you'd get the token's metadata URI like this
-        // uri = <string>res.value;
-        // but this contract, somehow, stores the metadata **directly**, you only get it as base64 string
-        metadata = Buffer.from(<string>res.value.replace("data:application/json;base64,", ""), "base64").toString();
-      } else if (res.returnData) {
-        metadata = <string>functions.tokenURI.tryDecodeResult(res.returnData) || '';
-      }
-      t.metadata = metadata;
-    }
-  })
-  ctx.log.info(`Done`);
+  // results.forEach((res, i) => {
+  //   let t = tokens.get(raveDataArr[i].tokenId.toString());
+  //   if (t) {
+  //     let metadata = '';
+  //     if (res.success) {
+  //       // usually, you'd get the token's metadata URI like this
+  //       // uri = <string>res.value;
+  //       // but this contract, somehow, stores the metadata **directly**, you only get it as base64 string
+  //       metadata = Buffer.from(<string>res.value.replace("data:application/json;base64,", ""), "base64").toString();
+  //     } else if (res.returnData) {
+  //       metadata = <string>functions.tokenURI.tryDecodeResult(res.returnData) || '';
+  //     }
+  //     t.metadata = metadata;
+  //   }
+  // })
+  // ctx.log.info(`Done`);
   
 
   await ctx.store.save([...owners.values()]);
