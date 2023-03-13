@@ -19,7 +19,7 @@ github:
 tasks:
   - init: |
       npm i
-      npm i @subsquid/cli
+      npm i -g @subsquid/cli
       docker compose pull
       gp sync-done setup
   - name: DB
